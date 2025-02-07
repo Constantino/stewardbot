@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { NextAppProvider } from '@toolpad/core/nextjs';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
+import AgricultureIcon from '@mui/icons-material/Agriculture';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { Navigation } from '@toolpad/core/AppProvider';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -14,19 +15,27 @@ const NAVIGATION: Navigation = [
   },
   {
     segment: '',
-    title: 'Dashboard',
-    icon: <DashboardIcon />,
+    title: 'Portfolio',
+    icon: <StackedLineChartIcon />,
   },
   {
-    segment: 'orders',
-    title: 'Orders',
-    icon: <ShoppingCartIcon />,
+    segment: 'positions',
+    title: 'Positions',
+    icon: <MonetizationOnIcon />,
+  },
+  {
+    segment: 'yield-farming',
+    title: 'Yield Farming',
+    icon: <AgricultureIcon />,
   },
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-toolpad-color-scheme="light">
+      <head>
+        <title>🤖 StewardBot v0.1</title>
+      </head>
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <React.Suspense fallback={<LinearProgress />}>
