@@ -13,6 +13,8 @@ import PortfolioWatch from '../components/PortfolioWatch';
 // import PageViewsBarChart from '../components/PageViewsBarChart';
 // import CustomTreeView from '../components/CustomTreeView';
 // import ChartUserByCountry from '../components/ChartUserByCountry';
+import PositionsTable from '../components/PositionsTable';
+import YieldPositionsTable from '../components/YieldPositionsTable';
 
 const data: StatCardProps[] = [
   {
@@ -129,6 +131,8 @@ export default function DashboardContent() {
               ))}
             </Grid>
             <PortfolioWatch />
+            <PositionsTable />
+            <YieldPositionsTable />
           </Box>
         </Stack>
       </Box>

@@ -70,18 +70,22 @@ export default function PortfolioWatch() {
           <Card variant="outlined">
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
-                Sector Distribution
+                Asset Allocation
               </Typography>
               <PieChart
                 series={[
                   {
-                    data: pieData.map((item, index) => ({
-                      ...item,
-                      color: pieColors[index % pieColors.length], // Assign different shades
-                    })),
+                    data: [
+                      { id: 0, value: 33, label: 'Others' },
+                      { id: 1, value: 25, label: 'wETH' },
+                      { id: 2, value: 10, label: 'stETH' },
+                      { id: 3, value: 10, label: 'PEPE' },
+                      { id: 4, value: 20, label: 'BTC' },
+                      { id: 5, value: 20, label: 'USDT' },
+                    ],
                   },
                 ]}
-                width={400}
+                width={500}
                 height={250}
               />
             </CardContent>
