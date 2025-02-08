@@ -6,6 +6,7 @@ import AgricultureIcon from '@mui/icons-material/Agriculture';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { Navigation } from '@toolpad/core/AppProvider';
 import LinearProgress from '@mui/material/LinearProgress';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import theme from '../theme';
 
 const NAVIGATION: Navigation = [
@@ -15,6 +16,11 @@ const NAVIGATION: Navigation = [
   },
   {
     segment: '',
+    title: 'Agent',
+    icon: <SmartToyIcon />,
+  },
+  {
+    segment: 'portfolio',
     title: 'Portfolio',
     icon: <StackedLineChartIcon />,
   },
@@ -30,6 +36,10 @@ const NAVIGATION: Navigation = [
   },
 ];
 
+const branding = {
+  title: 'StewardBot',
+}
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-toolpad-color-scheme="light">
@@ -39,7 +49,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <React.Suspense fallback={<LinearProgress />}>
-            <NextAppProvider theme={theme} navigation={NAVIGATION}>
+            <NextAppProvider theme={theme} navigation={NAVIGATION} branding={branding}>
               {children}
             </NextAppProvider>
           </React.Suspense>
