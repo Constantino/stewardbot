@@ -21,29 +21,10 @@ const getThreadId = async (req = request, res = response) => {
 
 const getAIResponse = async (req = request, res = response) => {
 
-    console.log("body: ", req.body)
-
-    const query = req.query;
     const { threadId, message } = req.body
 
-    if(!threadId || !message) {
-        return res.status(404).json({
-            message: "Missing parameters review the threadId and message."
-        })
-    }
-
-    //const message = await startChat();
-    
-    // const thread = await createThread();
-    // const threadId = thread.id
-
-    console.log("threadId: ", threadId)
-
-    // const message = "What's the best wine of the world?"
-    
     addMessage(threadId, message).then(message => {
         
-
         // Run the assistant
         runAssistant(threadId).then(run => {
             const runId = run.id;           

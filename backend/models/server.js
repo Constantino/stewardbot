@@ -10,6 +10,7 @@ class Server {
         this.port = process.env.PORT;
 
         this.openAiAssitant = '/api/v1/assistant'
+        this.helloWorld = '/api/v1/helloWorld'
 
          // middlewares
          this.middlewares();
@@ -28,6 +29,7 @@ class Server {
 
     routes() {
         this.app.use( this.openAiAssitant , require('../routes/openAi.routes'));
+        this.app.use( this.helloWorld , require('../routes/helloWorld.routes'));
     }
 
     listen() {
