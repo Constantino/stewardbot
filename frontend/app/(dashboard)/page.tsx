@@ -1,8 +1,21 @@
-import React from "react";
-import { Box, TextField, Button, Typography, Container } from "@mui/material";
+"use client"
+import React, { useState } from "react";
+import { Box, TextField, Button, Typography, Container, CircularProgress } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import InvestmentSuggestions from "../components/InvestmentSuggestions";
 
 export default function HomePage() {
+  const [loading, setLoading] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+
+  const handleButtonClick = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setShowOptions(true);
+    }, 1000);
+  };
+
   return (
     <>
       <Typography
@@ -13,13 +26,14 @@ export default function HomePage() {
           background: "linear-gradient(90deg, #007BFF, #A020F0)", // Blue to Purple gradient
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
-          fontSize: "2.5rem", // Adjust font size
+          fontSize: "2.5rem",
           fontWeight: "bold",
           marginBottom: 7,
         }}
       >
         Welcome to your new favorite DeFi Agent
       </Typography>
+
       <Container
         maxWidth="md"
         sx={{
@@ -27,16 +41,12 @@ export default function HomePage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "left",
-          height: "100vh", // Center vertically
           textAlign: "center",
-          mt: 15,
+          mt: 5,
         }}
       >
-        {/* Gradient Heading */}
-
-
         {/* Subtitle */}
-        <Typography variant="h4" component="h4" sx={{ marginBottom: 2 }}>
+        <Typography variant="h6" sx={{ marginBottom: 2 }}>
           What can I help you with?
         </Typography>
 
@@ -47,13 +57,13 @@ export default function HomePage() {
             alignItems: "center",
             width: "100%",
             gap: 1,
+            marginBottom: 2, // Add spacing for loading & options
           }}
         >
           <TextField
             fullWidth
             variant="outlined"
             placeholder="Type here..."
-            rows={4}
             sx={{
               borderRadius: "20px",
               backgroundColor: "white",
@@ -64,12 +74,24 @@ export default function HomePage() {
             sx={{
               minWidth: "50px",
               height: "50px",
-              borderRadius: "50%", // Circular button
+              borderRadius: "50%",
             }}
+            onClick={handleButtonClick}
           >
             <SendIcon />
           </Button>
         </Box>
+
+        {/* Loading Indicator */}
+        {loading && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginTop: 2 }}>
+            <CircularProgress size={24} />
+            <Typography variant="body1">Thinking...🧠</Typography>
+          </Box>
+        )}
+
+        {/* InvestmentOptions appears after loading */}
+        {showOptions && !loading && <InvestmentSuggestions />}
       </Container>
     </>
   );
