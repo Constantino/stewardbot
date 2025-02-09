@@ -1,8 +1,7 @@
-const processInvestment = (req) => {
-  console.log("Request", req);
-  return "Your investment has been processed successfully!!";
-};
+const processInvestment = () => {
+    return "investment done"
+}
 
 module.exports = {
-  processInvestment,
-};
+    processInvestment
+}
