@@ -32,10 +32,44 @@ const {
 // Load environment variables
 dotenv.config();
 
+// Constants
 const NETWORKS = {
   arbitrum: { chainId: 42161, rpcUrl: process.env.ARBITRUM_RPC_URL },
   avalanche: { chainId: 43114, rpcUrl: process.env.AVALANCHE_RPC_URL },
   sepolia: { chainId: 11155111, rpcUrl: process.env.SEPOLIA_RPC_URL },
+};
+
+// Only Uniswap V3 supported for now
+const SWAP_ROUTER_ADDRESSES = {
+  avalanche: "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
+  arbitrum: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+};
+
+// Token addresses
+const TOKEN_ADDRESSES = {
+  arbitrum: {
+    WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    USDC: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    GRT: "0x9623063377AD1B27544C965cCd7342f7EA7e88C7",
+    LINK: "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+    AAVE: "0xba5DdD1f9d7F570dc94a51479a000E3BCE967196",
+    CRV: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978",
+  },
+  avalanche: {
+    WETH: "x01",
+    USDC: "x01",
+  },
+};
+
+const POOL_ADDRESSES = {
+  arbitrum: {
+    WETH_USDC: "0xC6962004f452bE9203591991D15f6b388e09E8D0",
+    WETH_GRT: "0x74d0Ae8B8e1fCA6039707564704a25aD2ee036B0",
+    WETH_LINK: "0x468b88941e7Cc0B88c1869d68ab6b570bCEF62Ff",
+    WETH_AAVE: "0xDD672b3B768A16b9BcB4eE1060d3e8221435BeAa",
+    WETH_CRV: "0xa95b0F5a65a769d82AB4F3e82842E45B8bbAf101",
+  },
+  avalanche: {},
 };
 
 // TODO: Change hardcoded portfolio value to real value
@@ -45,18 +79,13 @@ const PORTFOLIO_TOTAL_IN_USD = 1000;
  * Fetch Uniswap pool data
  */
 const fetchPoolData = async (publicClient, poolAddress) => {
-  console.log("begin");
-  console.log("publicClient: ", publicClient)
-  console.log("poolAddress: ", poolAddress)
-  console.log("pool abi: ", POOL_ABI.abi)
-
   const slot0 = await publicClient.readContract({
     address: poolAddress,
     abi: POOL_ABI.abi,
     functionName: "slot0",
   });
 
-  console.log("slot0: ", slot0)
+  console.log("slot0: ", slot0);
 
   const liquidity = await publicClient.readContract({
     address: poolAddress,
@@ -64,7 +93,7 @@ const fetchPoolData = async (publicClient, poolAddress) => {
     functionName: "liquidity",
   });
 
-  console.log("liquidity: ", liquidity)
+  console.log("liquidity: ", liquidity);
 
   return {
     sqrtPriceX96: BigInt(slot0[0]),
@@ -114,6 +143,7 @@ const executeSwapService = async ({
     transport: http(rpcUrl),
     chain: customChain,
   });
+
   const walletClient = createWalletClient({
     transport: http(rpcUrl),
     chain: customChain,
@@ -130,23 +160,19 @@ const executeSwapService = async ({
     throw new Error("Safe not deployed.");
   }
 
-  // Token addresses (Replace with actual token addresses per network)
-  const TOKEN_ADDRESSES = {
-    WETH: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-    USDC: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-  };
-
-  const SWAP_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564"; // Uniswap V3 Router
+  const SWAP_ROUTER_ADDRESS = SWAP_ROUTER_ADDRESSES[network];
 
   // const INPUT_AMOUNT = swapAmountUSD.toString();
   // 100000000000000
   // 90000000000000
   // 00000100000000000
-  const INPUT_AMOUNT = "1000000000";
+  // 5000000000000 aprox 0.01 USD
+  // 10000000000000 aprox 0.03 USD
+  const INPUT_AMOUNT = "5000000000000";
   const OUTPUT_AMOUNT = "0"; // 0 USDC
 
-  const tokenSellAddress = TOKEN_ADDRESSES[sellToken];
-  const tokenBuyAddress = TOKEN_ADDRESSES[buyToken];
+  const tokenSellAddress = TOKEN_ADDRESSES[network][sellToken];
+  const tokenBuyAddress = TOKEN_ADDRESSES[network][buyToken];
 
   if (!tokenSellAddress || !tokenBuyAddress) {
     throw new Error("Invalid token selection.");
@@ -156,7 +182,7 @@ const executeSwapService = async ({
   const sellTokenInstance = new Token(
     chainId,
     tokenSellAddress,
-    18,
+    sellToken === "USDC" ? 6 : 18, // Adjust decimals depending on USDC or token
     sellToken,
     sellToken
   );
@@ -164,13 +190,13 @@ const executeSwapService = async ({
   const buyTokenInstance = new Token(
     chainId,
     tokenBuyAddress,
-    6,
+    buyToken === "USDC" ? 6 : 18, // Adjust decimals depending on USDC or token
     buyToken,
     buyToken
   );
   console.log("checkpoint 7");
   // Fetch Pool Data
-  const poolAddress = "0xC6962004f452bE9203591991D15f6b388e09E8D0"; // Adjust per pair
+  const poolAddress = POOL_ADDRESSES[network][`WETH_${buyToken}`];
 
   const poolInfo = await fetchPoolData(publicClient, poolAddress);
   console.log("checkpoint 8");
@@ -204,13 +230,7 @@ const executeSwapService = async ({
     options
   );
   console.log("checkpoint 13");
-  // Create transaction
-
-  const callDataApprove = encodeFunctionData({
-    abi: WETH_ABI.WETH_ABI,
-    functionName: "approve",
-    args: [SWAP_ROUTER_ADDRESS, INPUT_AMOUNT],
-  });
+  // Create transaction **** ISSUES BEGIN HERE ****
 
   const callDataDeposit = encodeFunctionData({
     abi: WETH_ABI.WETH_ABI,
@@ -218,38 +238,53 @@ const executeSwapService = async ({
     args: [],
   });
 
+  const safeDepositTx = {
+    to: TOKEN_ADDRESSES[network]["WETH"],
+    value: INPUT_AMOUNT,
+    data: callDataDeposit,
+    operation: OperationType.Call,
+  };
+
+  const callDataApprove = encodeFunctionData({
+    abi: WETH_ABI.WETH_ABI, // Any generic ERC20 ABI works here
+    functionName: "approve",
+    args: [SWAP_ROUTER_ADDRESS, INPUT_AMOUNT],
+  });
+
+  const safeApproveTx = {
+    to: TOKEN_ADDRESSES[network][sellToken],
+    value: "0",
+    data: callDataApprove,
+    operation: OperationType.Call,
+  };
+
   const safeSwapTx = {
     to: SWAP_ROUTER_ADDRESS,
     value: methodParameters.value,
     data: methodParameters.calldata,
     operation: OperationType.Call,
   };
-  const safeApproveTx = {
-    to: TOKEN_ADDRESSES["WETH"],
-    value: "0",
-    data: callDataApprove,
-    operation: OperationType.Call,
-  };
-  const safeDepositTx = {
-    to: TOKEN_ADDRESSES["WETH"],
-    value: INPUT_AMOUNT,
-    data: callDataDeposit,
-    operation: OperationType.Call,
-  };
-  console.log("checkpoint 14");
 
-  console.log("weth abi: ", WETH_ABI.WETH_ABI);
+  console.log("Executing swap...🔄🔄🔄");
 
-  console.log("Executing swap...🔄");
+  // console.log("safeDepositTx: ", safeDepositTx);
+  // console.log("safeApproveTx: ", safeApproveTx);
+  // console.log("safeSwapTx: ", safeSwapTx);
 
-  console.log("safeDepositTx: ", safeDepositTx)
-  console.log("safeApproveTx: ", safeApproveTx)
-  console.log("safeSwapTx: ", safeSwapTx)
+  // If selling WETH we need to send the deposit, approve and swap txns
+  // otherwise we only need the swap txn
 
-  const safeTx = await protocolKit.createTransaction({
-    transactions: [safeDepositTx, safeApproveTx, safeSwapTx],
-    onlyCalls: true,
-  });
+  if (sellToken === "WETH") {
+    safeTx = await protocolKit.createTransaction({
+      transactions: [safeDepositTx, safeApproveTx, safeSwapTx],
+      onlyCalls: true,
+    });
+  } else {
+    safeTx = await protocolKit.createTransaction({
+      transactions: [safeApproveTx, safeSwapTx],
+      onlyCalls: true,
+    });
+  }
 
   console.log("Tx created: ", safeTx);
 
