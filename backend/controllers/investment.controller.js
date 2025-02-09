@@ -1,19 +1,17 @@
-const { request, response } = require('express');
+const { request, response } = require("express");
 
-const {
-    processInvestment
-} = require ('../services/investment.service')
+const { processInvestment } = require("../services/investment.service");
 
 const invest = async (req = request, res = response) => {
-    const query = req.query;
+  const body = req.body;
 
-    const msg = processInvestment()
+  const msg = processInvestment(body);
 
-    res.json({
-        message: msg
-    })
-}
+  res.json({
+    message: msg,
+  });
+};
 
-module.exports = { 
-    invest
-}
+module.exports = {
+  invest,
+};
