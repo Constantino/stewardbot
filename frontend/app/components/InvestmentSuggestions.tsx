@@ -43,23 +43,44 @@ const generateRandomData = () =>
     isGreen: Math.random() > 0.5, // Randomly decide if it's green or red
   }));
 
-export default function InvestmentSuggestions() {
+export default function InvestmentSuggestions({ investmentData }) {
+
+  console.log("investmentData: ", investmentData)
   const theme = useTheme();
-  const [investmentData] = React.useState(generateRandomData()); // Data is now static
+  // const [investmentData] = React.useState(generateRandomData()); // Data is now static
   const [selected, setSelected] = React.useState({});
 
   // Handle Checkbox Change
   const handleCheckboxChange = (coinName) => {
+    console.log("selected: ", selected);
     setSelected((prev) => ({ ...prev, [coinName]: !prev[coinName] }));
-  };
+  }; 
+
+  const handleInvest = async () => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    let raw = JSON.stringify({
+      "tokens": selected
+    });
+    const response2 = await fetch("https://stewardbot.azurewebsites.net/api/v1/invest", 
+      {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      }
+    )
+
+    let res2 = await response2.json();
+
+    console.log(res2); 
+  }
+
 
   return (
-    <Box sx={{ mt: 4 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Based on my investigation, here are some asset investment suggestions.
-      </Typography>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Add the ones that you want to your portfolio.
+    <Box sx={{ mt: 0 }}>
+      <Typography variant="h7" sx={{ mb: 2 }}>
+        Based on my investigation, here are some asset investment suggestions. Add the ones that you want to your portfolio.
       </Typography>
       <Card variant="outlined">
         <CardContent>
@@ -67,41 +88,22 @@ export default function InvestmentSuggestions() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Asset</TableCell>
-                  <TableCell align="right">Price ($)</TableCell>
-                  <TableCell align="right">% 24H</TableCell>
-                  <TableCell align="right">% 7D</TableCell>
-                  <TableCell align="right">% 30D</TableCell>
-                  <TableCell align="center">Last 24 hrs</TableCell>
+                  <TableCell>Token</TableCell>
+                  <TableCell>Ticker</TableCell>
+                  <TableCell>Potential</TableCell>
                   <TableCell align="center">Select</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {investmentData.map((row, index) => (
                   <TableRow key={index}>
-                    <TableCell>{row.coinName}</TableCell>
-                    <TableCell align="right">{row.price}</TableCell>
-                    <TableCell align="right" sx={{ color: row.change24h >= 0 ? "green" : "red" }}>
-                      {row.change24h}%
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: row.change7d >= 0 ? "green" : "red" }}>
-                      {row.change7d}%
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: row.change30d >= 0 ? "green" : "red" }}>
-                      {row.change30d}%
-                    </TableCell>
-                    <TableCell align="center">
-                      <SparkLineChart
-                        data={row.chartData}
-                        width={100}
-                        height={30}
-                        colors={[row.isGreen ? "green" : "red"]}
-                      />
-                    </TableCell>
+                    <TableCell>{row.tokenName}</TableCell>
+                    <TableCell align="right">{row.tokenTicker}</TableCell>
+                    <TableCell align="right">{row.reason}</TableCell>
                     <TableCell align="center">
                       <Checkbox
-                        checked={!!selected[row.coinName]}
-                        onChange={() => handleCheckboxChange(row.coinName)}
+                        checked={!!selected[row.tokenTicker]}
+                        onChange={() => handleCheckboxChange(row.tokenTicker)}
                         color="primary"
                       />
                     </TableCell>
@@ -112,7 +114,7 @@ export default function InvestmentSuggestions() {
           </TableContainer>
           {/* Invest Button */}
           <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Button variant="contained" color="primary">
+            <Button variant="contained" color="primary" onClick={ () => handleInvest() }>
               Invest
             </Button>
           </Box>
