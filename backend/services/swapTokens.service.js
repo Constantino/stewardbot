@@ -11,7 +11,7 @@ const {
 } = require("viem");
 
 const { privateKeyToAccount } = require("viem/accounts");
-const ERC20_ABI = require("../utils/abi/erc20");
+// const ERC20_ABI = require("../utils/abi/erc20");
 const WETH_ABI = require("../utils/abi/weth");
 const { Token } = require("@uniswap/sdk-core");
 const {
@@ -23,7 +23,7 @@ const {
 } = require("@uniswap/v3-sdk");
 const { TradeType, CurrencyAmount, Percent } = require("@uniswap/sdk-core");
 const JSBI = require("jsbi");
-const POOL_ABI = require("../utils/abi/pool").default;
+const POOL_ABI = require("../utils/abi/pool");
 const {
   OperationType,
   MetaTransactionData,
@@ -46,17 +46,25 @@ const PORTFOLIO_TOTAL_IN_USD = 1000;
  */
 const fetchPoolData = async (publicClient, poolAddress) => {
   console.log("begin");
+  console.log("publicClient: ", publicClient)
+  console.log("poolAddress: ", poolAddress)
+  console.log("pool abi: ", POOL_ABI.abi)
+
   const slot0 = await publicClient.readContract({
     address: poolAddress,
-    abi: POOL_ABI,
+    abi: POOL_ABI.abi,
     functionName: "slot0",
   });
 
+  console.log("slot0: ", slot0)
+
   const liquidity = await publicClient.readContract({
     address: poolAddress,
-    abi: POOL_ABI,
+    abi: POOL_ABI.abi,
     functionName: "liquidity",
   });
+
+  console.log("liquidity: ", liquidity)
 
   return {
     sqrtPriceX96: BigInt(slot0[0]),
@@ -131,7 +139,10 @@ const executeSwapService = async ({
   const SWAP_ROUTER_ADDRESS = "0xE592427A0AEce92De3Edee1F18E0157C05861564"; // Uniswap V3 Router
 
   // const INPUT_AMOUNT = swapAmountUSD.toString();
-  const INPUT_AMOUNT = "20000000000000";
+  // 100000000000000
+  // 90000000000000
+  // 00000100000000000
+  const INPUT_AMOUNT = "1000000000";
   const OUTPUT_AMOUNT = "0"; // 0 USDC
 
   const tokenSellAddress = TOKEN_ADDRESSES[sellToken];
@@ -194,24 +205,61 @@ const executeSwapService = async ({
   );
   console.log("checkpoint 13");
   // Create transaction
+
+  const callDataApprove = encodeFunctionData({
+    abi: WETH_ABI.WETH_ABI,
+    functionName: "approve",
+    args: [SWAP_ROUTER_ADDRESS, INPUT_AMOUNT],
+  });
+
+  const callDataDeposit = encodeFunctionData({
+    abi: WETH_ABI.WETH_ABI,
+    functionName: "deposit",
+    args: [],
+  });
+
   const safeSwapTx = {
     to: SWAP_ROUTER_ADDRESS,
     value: methodParameters.value,
     data: methodParameters.calldata,
     operation: OperationType.Call,
   };
+  const safeApproveTx = {
+    to: TOKEN_ADDRESSES["WETH"],
+    value: "0",
+    data: callDataApprove,
+    operation: OperationType.Call,
+  };
+  const safeDepositTx = {
+    to: TOKEN_ADDRESSES["WETH"],
+    value: INPUT_AMOUNT,
+    data: callDataDeposit,
+    operation: OperationType.Call,
+  };
   console.log("checkpoint 14");
+
+  console.log("weth abi: ", WETH_ABI.WETH_ABI);
+
   console.log("Executing swap...🔄");
 
+  console.log("safeDepositTx: ", safeDepositTx)
+  console.log("safeApproveTx: ", safeApproveTx)
+  console.log("safeSwapTx: ", safeSwapTx)
+
   const safeTx = await protocolKit.createTransaction({
-    transactions: [safeSwapTx],
+    transactions: [safeDepositTx, safeApproveTx, safeSwapTx],
     onlyCalls: true,
   });
 
+  console.log("Tx created: ", safeTx);
+
   const signedSafeTx = await protocolKit.signTransaction(safeTx);
 
+  console.log("Tx signed");
   // Execute the transaction after signing
+  console.log("execute after signed");
   const txResponse = await protocolKit.executeTransaction(signedSafeTx);
+  console.log("awaiting tx receipt");
   await publicClient.waitForTransactionReceipt({ hash: txResponse.hash });
 
   console.log(`Swap executed successfully: [${txResponse.hash}]`);

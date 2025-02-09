@@ -151,4 +151,7 @@ const WETH_ABI = [
     type: "event",
   },
 ];
-export default WETH_ABI;
+// export default WETH_ABI;
+module.exports = {
+  WETH_ABI
+} 
