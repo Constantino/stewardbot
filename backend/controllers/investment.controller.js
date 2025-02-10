@@ -1,19 +1,17 @@
-const { request, response } = require('express');
-
-const {
-    processInvestment
-} = require ('../services/investment.service')
+const { request, response } = require("express");
+const { processInvestment } = require("../services/investment.service");
 
 const invest = async (req = request, res = response) => {
-    const query = req.query;
+  try {
+    const result = await processInvestment(req.body);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: error.message });
+  }
+};
 
-    const msg = processInvestment()
-
-    res.json({
-        message: msg
-    })
-}
-
-module.exports = { 
-    invest
-}
+module.exports = {
+  invest,
+};
