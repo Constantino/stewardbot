@@ -31,24 +31,30 @@ const processInvestment = async (body) => {
         distributionFunds: 50, // NOTE: We are ignoring this for now
       });
 
-      if (response.success) {
+      if (response.data.success) {
         investmentResults.push({
           token: buyToken,
           status: "success",
-          transactionHash: response.transactionHash,
+          transactionHash: response.data.transactionHash,
         });
       } else {
         investmentResults.push({
           token: buyToken,
           status: "error",
-          message: "Unknown error occurred.",
+          message: response.data.message || "Unknown error occurred.",
         });
       }
     } catch (error) {
+      console.error(
+        `Error swapping ${buyToken}:`,
+        error.response?.data || error.message
+      );
+
       investmentResults.push({
         token: buyToken,
         status: "error",
-        message: error.message || `Failed to invest in ${buyToken}.`,
+        message:
+          error.response?.data?.error || `Failed to invest in ${buyToken}.`,
       });
     }
   }
