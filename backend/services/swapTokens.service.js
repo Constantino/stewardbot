@@ -73,7 +73,7 @@ const POOL_ADDRESSES = {
 };
 
 // TODO: Change hardcoded portfolio value to real value
-const PORTFOLIO_TOTAL_IN_USD = 1000;
+const PORTFOLIO_TOTAL_IN_USD = 3;
 
 /**
  * Fetch Uniswap pool data

@@ -57,12 +57,18 @@ export default function InvestmentSuggestions({ investmentData }) {
   }; 
 
   const handleInvest = async () => {
+    let tokensObj = []
+    const tokens = Object.keys(selected).map((key) => tokensObj.push({ [key]: selected[key] }));
+
+    console.log("tokens sent: ", tokensObj)
+
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     let raw = JSON.stringify({
-      "tokens": selected
+      "tokens": tokensObj,
+      "network": "arbitrum"
     });
-    const response2 = await fetch("https://stewardbot.azurewebsites.net/api/v1/invest", 
+    const response2 = await fetch("http://localhost:3001/api/v1/invest", 
       {
         method: "POST",
         headers: myHeaders,

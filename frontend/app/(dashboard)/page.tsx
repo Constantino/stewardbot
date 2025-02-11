@@ -106,7 +106,7 @@ export default function HomePage() {
           marginBottom: 7,
         }}
       >
-        Welcome to your new favorite DeFi Agent
+        Welcome to your new favorite DeFAI Agent
       </Typography>
 
       <Typography variant="h7" sx={{ mb: 2, textAlign: "center" }}>
