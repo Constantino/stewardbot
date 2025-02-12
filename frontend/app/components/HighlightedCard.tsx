@@ -7,6 +7,7 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import Link from 'next/link';
 
 export default function HighlightedCard() {
   const theme = useTheme();
@@ -17,20 +18,22 @@ export default function HighlightedCard() {
       <CardContent>
         <InsightsRoundedIcon />
         <Typography component="h2" variant="subtitle2" gutterBottom sx={{ fontWeight: '600' }}>
-          Explore your data
+          Go Pro
         </Typography>
         <Typography sx={{ color: 'text.secondary', mb: '8px' }}>
-          Uncover performance and visitor insights with our data wizardry.
+          Join our exclusive waitlist to be the 1st to try our newest yield strategies and features.
         </Typography>
-        <Button
-          variant="contained"
-          size="small"
-          color="primary"
-          endIcon={<ChevronRightRoundedIcon />}
-          fullWidth={isSmallScreen}
-        >
-          Get insights
-        </Button>
+        <Link href="https://stewardbot.xyz/" target='_blank'>
+          <Button
+            variant="contained"
+            size="small"
+            color="primary"
+            endIcon={<ChevronRightRoundedIcon />}
+            fullWidth={isSmallScreen}
+          >
+            Let Me In!
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
+// @ts-nocheck
 'use client';
-import * as React from 'react';
 import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
@@ -9,12 +9,14 @@ import StatCard, { StatCardProps } from '../components/StatCard';
 import HighlightedCard from '../components/HighlightedCard';
 import StatSummaryCard from '../components/StatSummaryCard';
 import PortfolioWatch from '../components/PortfolioWatch';
+import PositionsTable from '../components/PositionsTable';
+import YieldPositionsTable from '../components/YieldPositionsTable';
+import { useState, useEffect } from 'react';
 // import SessionsChart from '../components/SessionsChart';
 // import PageViewsBarChart from '../components/PageViewsBarChart';
 // import CustomTreeView from '../components/CustomTreeView';
 // import ChartUserByCountry from '../components/ChartUserByCountry';
-import PositionsTable from '../components/PositionsTable';
-import YieldPositionsTable from '../components/YieldPositionsTable';
+import { fetchTokenPrices } from '../utils/api';
 
 const data: StatCardProps[] = [
   {
@@ -77,6 +79,24 @@ const summaryData = [
 ];
 
 export default function DashboardContent() {
+  const [tokensInMyWallet, setTokensInMyWallet] = useState([]);
+  const [portfolioData, setPortfolioData] = useState([]);
+
+  useEffect(() => {
+    // Simulating fetching wallet tokens from backend
+    setTimeout(() => {
+      const walletTokens = [
+        { symbol: "aave", amount: 2 },
+        { symbol: "link", amount: 35 },
+        { symbol: "grt", amount: 800 },
+      ];
+      setTokensInMyWallet(walletTokens);
+
+      // Fetch prices for the tokens
+      fetchTokenPrices(walletTokens).then(setPortfolioData);
+    }, 1000);
+  }, []);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <Box
@@ -130,7 +150,7 @@ export default function DashboardContent() {
                 </Grid>
               ))}
             </Grid>
-            <PortfolioWatch />
+            <PortfolioWatch portfolioData={portfolioData} />
             <PositionsTable />
             <YieldPositionsTable />
           </Box>

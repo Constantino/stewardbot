@@ -1,16 +1,43 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 
-export default function PortfolioWatch() {
+type PortfolioData = {
+  name: string;
+  symbol: string;
+  amount: number;
+  price: number;
+}[];
+
+export default function PortfolioWatch({ portfolioData }: { portfolioData: PortfolioData }) {
   const theme = useTheme();
+  const [pieChartData, setPieChartData] = useState([]);
+
+  useEffect(() => {
+    if (portfolioData.length > 0) {
+      // 1. Calculate total portfolio value
+      const totalValue = portfolioData.reduce(
+        (acc, token) => acc + token.amount * token.price,
+        0
+      );
+
+      // 2. Calculate the percentage for each token
+      const formattedData = portfolioData.map((token, index) => ({
+        id: index, // Unique ID for PieChart
+        value: ((token.amount * token.price) / totalValue) * 100, // Percentage of portfolio
+        label: token.symbol.toUpperCase(), // Label for PieChart
+      }));
+
+      setPieChartData(formattedData);
+    }
+  }, [portfolioData]);
+
 
   // Data for the Line Chart
   const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
@@ -73,18 +100,7 @@ export default function PortfolioWatch() {
                 Asset Allocation
               </Typography>
               <PieChart
-                series={[
-                  {
-                    data: [
-                      { id: 0, value: 33, label: 'Others' },
-                      { id: 1, value: 25, label: 'wETH' },
-                      { id: 2, value: 10, label: 'stETH' },
-                      { id: 3, value: 10, label: 'PEPE' },
-                      { id: 4, value: 20, label: 'BTC' },
-                      { id: 5, value: 20, label: 'USDT' },
-                    ],
-                  },
-                ]}
+                series={[{ data: pieChartData }]}
                 width={500}
                 height={250}
               />

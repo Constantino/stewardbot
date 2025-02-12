@@ -21,7 +21,7 @@ const NAVIGATION: Navigation = [
   },
   {
     segment: 'portfolio',
-    title: 'Portfolio',
+    title: 'My Portfolio',
     icon: <StackedLineChartIcon />,
   },
   {
