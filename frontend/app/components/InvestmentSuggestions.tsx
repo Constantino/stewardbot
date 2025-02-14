@@ -85,7 +85,7 @@ export default function InvestmentSuggestions({ investmentData }) {
 
   return (
     <Box sx={{ mt: 0 }}>
-      <Typography variant="h7" sx={{ mb: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Based on my investigation, here are some asset investment suggestions. Add the ones that you want to your portfolio.
       </Typography>
       <Card variant="outlined">
