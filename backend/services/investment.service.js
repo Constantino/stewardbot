@@ -5,7 +5,7 @@ const SUPPORTED_NETWORKS = ["ethereum", "polygon", "arbitrum"];
 // NOTE: Constantino, I wasn't sure how to handle this calling another service within a service.
 // This was the solution I came up with. I also had to install axios, lmk if there's a better way.
 
-const BASE_URL = process.env.SWAP_SERVICE_URL || "http://localhost:3001/api/v1";
+const BASE_URL = process.env.SWAP_SERVICE_URL || "https://stewardbot.azurewebsites.net/api/v1";
 
 const processInvestment = async (body) => {
   if (!SUPPORTED_NETWORKS.includes(body.network)) {
