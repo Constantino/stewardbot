@@ -1,5 +1,5 @@
 const { request, response } = require("express");
-const { processStaking } = require("../services/stake.service");
+const { processStaking } = require("../services/stake.service.js");
 
 const stakeController = async (req = request, res = response) => {
   try {
