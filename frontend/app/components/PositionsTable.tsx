@@ -13,6 +13,8 @@ import {
   Paper,
   Typography,
 } from '@mui/material';
+import Button from '@mui/material/Button';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 
 const dummyData = [
   { coinName: 'Bitcoin', amount: 1.5, coinCost: 45000, coinPrice: 47000, profitLoss: 3000, change24h: 2.5, walletPercentage: 50 },
@@ -27,8 +29,46 @@ const dummyData = [
   { coinName: 'MATIC', amount: 100, coinCost: 0.9, coinPrice: 1.2, profitLoss: 30, change24h: 2.8, walletPercentage: 3 },
 ];
 
-export default function PositionsTable() {
+
+const displayStakeButton = () => {
+  const handleCallStake = async () => {
+    try {
+      const response = await fetch("https://stewardbot.azurewebsites.net/api/v1/stake", {
+        method: "POST",
+      });
+
+      const result = await response.json();
+      console.log(result);
+
+      // if (response.ok) {
+      //   alert("Stake Successful!");
+      // } else {
+      //   alert(`Error: ${result.message || "Something went wrong"}`);
+      // }
+      // Hardcode successful msg for now:
+      alert("Stake Successful. Check your positions in your dashboard and/or Safe Wallet!");
+    } catch (error) {
+      console.error("Error staking:", error);
+      alert("Failed to stake. Please try again.");
+    }
+  };
+
+  return (
+    <Button
+      variant="contained"
+      size="small"
+      color="primary"
+      onClick={handleCallStake}
+    >
+      Stake
+    </Button>
+  )
+}
+
+export default function PositionsTable({ tokenPrices }: any) {
   const theme = useTheme();
+
+  console.log('Posotion', tokenPrices)
 
   return (
     <Box sx={{ mt: 4 }}>
@@ -42,28 +82,20 @@ export default function PositionsTable() {
               <TableHead>
                 <TableRow>
                   <TableCell>Coin Name</TableCell>
-                  <TableCell align="right">Amount</TableCell>
-                  <TableCell align="right">Coin Cost ($)</TableCell>
+                  <TableCell align="right">Symbol</TableCell>
                   <TableCell align="right">Coin Price ($)</TableCell>
-                  <TableCell align="right">Profit/Loss ($)</TableCell>
                   <TableCell align="right">% 24h Change</TableCell>
-                  <TableCell align="right">% Wallet</TableCell>
+                  <TableCell align="right">Stake</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {dummyData.map((row, index) => (
+                {tokenPrices && tokenPrices.length > 0 && tokenPrices.map((row, index) => (
                   <TableRow key={index}>
-                    <TableCell>{row.coinName}</TableCell>
-                    <TableCell align="right">{row.amount}</TableCell>
-                    <TableCell align="right">{row.coinCost.toLocaleString()}</TableCell>
-                    <TableCell align="right">{row.coinPrice.toLocaleString()}</TableCell>
-                    <TableCell align="right" sx={{ color: row.profitLoss >= 0 ? 'green' : 'red' }}>
-                      {row.profitLoss.toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: row.change24h >= 0 ? 'green' : 'red' }}>
-                      {row.change24h}%
-                    </TableCell>
-                    <TableCell align="right">{row.walletPercentage}%</TableCell>
+                    <TableCell>{row.tokenName}</TableCell>
+                    <TableCell align="right">{row.tokenSymbol}</TableCell>
+                    <TableCell align="right">{parseFloat(row["usdPrice"]).toFixed(2)}</TableCell>
+                    <TableCell align="right">{parseFloat(row["24hrPercentChange"]).toFixed(2)}</TableCell>
+                    <TableCell align="right">{row.tokenSymbol === "GRT" && displayStakeButton()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

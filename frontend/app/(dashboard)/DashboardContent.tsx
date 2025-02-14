@@ -84,11 +84,12 @@ export default function DashboardContent() {
   const [mainData, setMainData] = useState()
   const [tokenList, setTokenList] = useState([])
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [positionsData, setPositionsData] = useState([]);
 
-  useEffect( () => {
+  useEffect(() => {
 
     async function bringData() {
-      
+
       // Simulating fetching wallet tokens from backend
       // setTimeout(() => {
       //   const walletTokens = [
@@ -97,54 +98,54 @@ export default function DashboardContent() {
       //     { symbol: "grt", amount: 800 },
       //   ];
       //   setTokensInMyWallet(walletTokens);
-  
+
       //   // Fetch prices for the tokens
       //   fetchTokenPrices(walletTokens).then(setPortfolioData);
       // }, 1000);
 
       let arrHistoricalPrices = {}
-  
+
       const myHeaders1 = new Headers();
       myHeaders1.append("accept", "application/json");
       // myHeaders1.append("Content-Type", "application/json");
       myHeaders1.append("x-client-id", process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID);
-  
-      const response1 = await fetch("https://1.insight.thirdweb.com/v1/tokens/erc20/0x6eC45c239C714271590D1aa45B86d54965bC1dA2?chain=42161", 
+
+      const response1 = await fetch("https://1.insight.thirdweb.com/v1/tokens/erc20/0x6eC45c239C714271590D1aa45B86d54965bC1dA2?chain=42161",
         {
           method: "GET",
           headers: myHeaders1
         }
       )
-  
+
       let res1 = await response1.json();
-      console.log("tokensHolded: ", res1.data); 
+      console.log("tokensHolded: ", res1.data);
       let tokensHolded = res1.data;
       let arrTokens = []
 
-      tokensHolded.forEach((element) => { 
+      tokensHolded.forEach((element) => {
         arrHistoricalPrices[element.tokenAddress] = {
           "balance": element.balance
         }
-        arrTokens.push({["token_address"]: element.tokenAddress})
+        arrTokens.push({ ["token_address"]: element.tokenAddress })
       })
 
       console.log("arrTokens: ", arrTokens)
 
       setTokenList(arrTokens)
-  
+
       let raw = JSON.stringify(
         {
           "tokens": arrTokens
         }
       );
-  
-      console.log("raw: ", raw )
+
+      console.log("raw: ", raw)
 
       const myHeaders2 = new Headers();
       myHeaders2.append("Content-Type", "application/json");
       myHeaders2.append("X-API-Key", process.env.NEXT_PUBLIC_MORALIS_API_KEY);
-  
-      const response2 = await fetch("https://deep-index.moralis.io/api/v2.2/erc20/prices?chain=arbitrum&include=percent_change", 
+
+      const response2 = await fetch("https://deep-index.moralis.io/api/v2.2/erc20/prices?chain=arbitrum&include=percent_change",
         {
           method: "POST",
           headers: myHeaders2,
@@ -152,29 +153,30 @@ export default function DashboardContent() {
           redirect: "follow"
         }
       )
-  
-      let res2 = await response2.json();
-  
-      console.log("prices of tokens holded: ", res2); 
-      let tokenPrices = res2;
 
-      
+      let res2 = await response2.json();
+
+      console.log("prices of tokens holded: ", res2);
+      let tokenPrices = res2;
+      setPositionsData(tokenPrices);
+
+
 
       const myHeaders3 = new Headers();
       myHeaders3.append("accept", "application/json");
       myHeaders3.append("X-API-Key", process.env.NEXT_PUBLIC_MORALIS_API_KEY);
 
-      for(let i = 0; i < tokenPrices.length; i++) {
+      for (let i = 0; i < tokenPrices.length; i++) {
         arrHistoricalPrices[tokenPrices[i].tokenAddress].price = tokenPrices[i].usdPrice
         arrHistoricalPrices[tokenPrices[i].tokenAddress].tokenName = tokenPrices[i].tokenName
         arrHistoricalPrices[tokenPrices[i].tokenAddress].tokenSymbol = tokenPrices[i].tokenSymbol
         arrHistoricalPrices[tokenPrices[i].tokenAddress].tokenDecimals = tokenPrices[i].tokenDecimals
 
-        if(i == (tokenPrices.length -1) ) {
+        if (i == (tokenPrices.length - 1)) {
           setIsDataLoaded(true);
         }
         // setTimeout(async () => {
-          
+
 
         //   const response3 = await fetch(`https://deep-index.moralis.io/api/v2.2/pairs/${tokenPrices[i].pairAddress}/ohlcv?chain=arbitrum&timeframe=1d&currency=usd&fromDate=2025-01-13&toDate=2025-02-13`, 
         //     {
@@ -182,30 +184,30 @@ export default function DashboardContent() {
         //       headers: myHeaders3
         //     }
         //   )
-  
+
         //   let res3 = await response3.json();
-      
+
         //   console.log("historicalPrices: ", res3); 
-    
+
         //   arrHistoricalPrices[res3.tokenAddress].historicalPrices = res3
-  
-  
+
+
         //   console.log("waiting 1 s")
 
-          
+
 
         // }, i*1100);
 
       }
-  
-      
+
+
       console.log("arrHistoricalPrices: ", arrHistoricalPrices)
 
       setMainData(arrHistoricalPrices)
     }
-    
+
     bringData();
-    
+
   }, []);
 
   return (
@@ -262,10 +264,10 @@ export default function DashboardContent() {
               ))}
             </Grid>
             {
-               (isDataLoaded) && 
-                <PortfolioWatch portfolioData={mainData} tokenList={ tokenList } />
+              (isDataLoaded) &&
+              <PortfolioWatch portfolioData={mainData} tokenList={tokenList} />
             }
-            <PositionsTable />
+            <PositionsTable tokenPrices={positionsData} />
             <YieldPositionsTable />
           </Box>
         </Stack>
