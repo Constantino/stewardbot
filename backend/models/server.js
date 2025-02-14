@@ -12,6 +12,7 @@ class Server {
     this.helloWorld = "/api/v1/helloWorld";
     this.swapTokens = "/api/v1/swapTokens";
     this.investment = "/api/v1/invest";
+    this.stake = "/api/v1/stake";
 
     // middlewares
     this.middlewares();
@@ -33,6 +34,7 @@ class Server {
     this.app.use(this.helloWorld, require("../routes/helloWorld.routes"));
     this.app.use(this.swapTokens, require("../routes/swapTokens.routes"));
     this.app.use(this.investment, require("../routes/investment.routes"));
+    this.app.use(this.stake, require("../routes/stake.routes"));
   }
 
   listen() {

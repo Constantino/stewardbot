@@ -13,6 +13,7 @@ const {
 const { privateKeyToAccount } = require("viem/accounts");
 // const ERC20_ABI = require("../utils/abi/erc20");
 const WETH_ABI = require("../utils/abi/weth");
+const WAVAX_ABI = require("../utils/abi/erc20");
 const { Token } = require("@uniswap/sdk-core");
 const {
   FeeAmount,
@@ -56,7 +57,9 @@ const TOKEN_ADDRESSES = {
     CRV: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978",
   },
   avalanche: {
-    WETH: "x01",
+    WETH: "0x8b82A291F83ca07Af22120ABa21632088fC92931",
+    WETHe: "0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab",
+    WAVAX: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
     USDC: "x01",
   },
 };
@@ -69,7 +72,9 @@ const POOL_ADDRESSES = {
     WETH_AAVE: "0xDD672b3B768A16b9BcB4eE1060d3e8221435BeAa",
     WETH_CRV: "0xa95b0F5a65a769d82AB4F3e82842E45B8bbAf101",
   },
-  avalanche: {},
+  avalanche: {
+    AVAX_WETHe: "0x724f6a02ED2eB82D8d45034B280903cf663731Ab",
+  },
 };
 
 // TODO: Change hardcoded portfolio value to real value
@@ -196,7 +201,18 @@ const executeSwapService = async ({
   );
   console.log("checkpoint 7");
   // Fetch Pool Data
-  const poolAddress = POOL_ADDRESSES[network][`WETH_${buyToken}`];
+
+  let poolAddress;
+  if (network === "arbitrum") {
+    poolAddress = POOL_ADDRESSES[network][`WETH_${buyToken}`];
+  } else if (network === "avalanche") {
+    console.log("USING AVALANCHEEEEEEEEEEEEEEEEEEEEEE");
+    poolAddress = POOL_ADDRESSES[network][`AVAX_${buyToken}`];
+  } else {
+    throw new Error(
+      "Unsupported network. Only 'arbitrum' and 'avalanche' supported at the moment."
+    );
+  }
 
   const poolInfo = await fetchPoolData(publicClient, poolAddress);
   console.log("checkpoint 8");
@@ -238,18 +254,31 @@ const executeSwapService = async ({
     args: [],
   });
 
-  const safeDepositTx = {
-    to: TOKEN_ADDRESSES[network]["WETH"],
-    value: INPUT_AMOUNT,
-    data: callDataDeposit,
-    operation: OperationType.Call,
-  };
+  let safeDepositTx = {};
+  if (network === "arbitrum") {
+    safeDepositTx = {
+      to: TOKEN_ADDRESSES[network]["WETH"],
+      value: INPUT_AMOUNT,
+      data: callDataDeposit,
+      operation: OperationType.Call,
+    };
+  } else {
+    safeDepositTx = {
+      to: TOKEN_ADDRESSES[network]["WAVAX"],
+      value: INPUT_AMOUNT,
+      data: callDataDeposit,
+      operation: OperationType.Call,
+    };
+  }
 
   const callDataApprove = encodeFunctionData({
-    abi: WETH_ABI.WETH_ABI, // Any generic ERC20 ABI works here
+    abi: sellToken === "WAVAX" ? WAVAX_ABI.erc20Abi : WETH_ABI.WETH_ABI,
     functionName: "approve",
     args: [SWAP_ROUTER_ADDRESS, INPUT_AMOUNT],
   });
+
+  console.log("THE CALL DATA APPROVE", callDataApprove);
+  console.log("******************************************************");
 
   const safeApproveTx = {
     to: TOKEN_ADDRESSES[network][sellToken],
@@ -285,8 +314,6 @@ const executeSwapService = async ({
       onlyCalls: true,
     });
   }
-
-  console.log("Tx created: ", safeTx);
 
   const signedSafeTx = await protocolKit.signTransaction(safeTx);
 
