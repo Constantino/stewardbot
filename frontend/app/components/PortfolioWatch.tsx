@@ -8,31 +8,69 @@ import Grid from '@mui/material/Grid';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 
-type PortfolioData = {
-  name: string;
-  symbol: string;
-  amount: number;
-  price: number;
-}[];
+type PortfolioData = any;
+type TokenList = any;
 
-export default function PortfolioWatch({ portfolioData }: { portfolioData: PortfolioData }) {
+export default function PortfolioWatch({ portfolioData, tokenList }: { portfolioData: PortfolioData, tokenList: TokenList }) {
   const theme = useTheme();
   const [pieChartData, setPieChartData] = useState([]);
 
   useEffect(() => {
-    if (portfolioData.length > 0) {
-      // 1. Calculate total portfolio value
-      const totalValue = portfolioData.reduce(
-        (acc, token) => acc + token.amount * token.price,
-        0
-      );
+    if (portfolioData) {
 
-      // 2. Calculate the percentage for each token
-      const formattedData = portfolioData.map((token, index) => ({
-        id: index, // Unique ID for PieChart
-        value: ((token.amount * token.price) / totalValue) * 100, // Percentage of portfolio
-        label: token.symbol.toUpperCase(), // Label for PieChart
-      }));
+      let tokenAndPricesPerDay = {}
+
+      // 1. Calculate total portfolio value
+      let totalValue = 0
+      for(let i = 0; i < tokenList.length; i++) {
+        totalValue += portfolioData[tokenList[i].token_address].balance/Math.pow(10, portfolioData[tokenList[i].token_address].tokenDecimals)*portfolioData[tokenList[i].token_address].price
+
+        // if(!!portfolioData[tokenList[i].token_address].historicalPrices.result) {
+          
+        //   let monthValues = portfolioData[tokenList[i].token_address].historicalPrices.result.map((e, index) => {
+            
+        //     console.log("e: ", e)
+        //     return portfolioData[tokenList[i].token_address].balance/Math.pow(10, portfolioData[tokenList[i].token_address].tokenDecimals)*e.close
+        //   }) 
+          
+        //   console.log("monthValues: ", monthValues)
+
+        //   tokenAndPricesPerDay[tokenList[i].token_address].monthValues = monthValues
+        // }
+
+        
+      }
+      
+      console.log("totalValue: ", totalValue)
+      // console.log("tokenAndPricesPerDay: ", tokenAndPricesPerDay)
+
+      let formattedData = []
+
+      for(let i = 0; i < tokenList.length; i++) {
+        totalValue += portfolioData[tokenList[i].token_address].balance/Math.pow(10, portfolioData[tokenList[i].token_address].tokenDecimals)*portfolioData[tokenList[i].token_address].price
+        formattedData.push(
+          {
+            id: i,
+            value: portfolioData[tokenList[i].token_address].balance/Math.pow(10, portfolioData[tokenList[i].token_address].tokenDecimals)*portfolioData[tokenList[i].token_address].price/totalValue,
+            label: portfolioData[tokenList[i].token_address].tokenSymbol
+          }
+        )
+      }
+
+
+      // const totalValue = portfolioData.reduce(
+      //   (acc, token) => acc + token.amount * token.price,
+      //   0
+      // );
+
+
+
+      // // 2. Calculate the percentage for each token
+      // const formattedData = portfolioData.map((token, index) => ({
+      //   id: index, // Unique ID for PieChart
+      //   value: ((token.amount * token.price) / totalValue) * 100, // Percentage of portfolio
+      //   label: token.symbol.toUpperCase(), // Label for PieChart
+      // }));
 
       setPieChartData(formattedData);
     }

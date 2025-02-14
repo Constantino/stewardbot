@@ -68,7 +68,7 @@ export default function InvestmentSuggestions({ investmentData }) {
       "tokens": tokensObj,
       "network": "arbitrum"
     });
-    const response2 = await fetch("http://localhost:3001/api/v1/invest", 
+    const response2 = await fetch("https://stewardbot.azurewebsites.net/api/v1/invest", 
       {
         method: "POST",
         headers: myHeaders,
