@@ -24,14 +24,14 @@ const processStaking = async () => {
     console.log("Wallet address:", wallet.address);
     console.log("Safe address:", SAFE_ADDRESS);
 
-    // const safeSdk = await Safe.default.init({
-    //   provider: ARBITRUM_RPC_URL, // Or an ethers provider instance
-    //   signer: SIGNER_PRIVATE_KEY,
-    //   safeAddress: SAFE_ADDRESS,
-    // });
-    // if (!(await safeSdk.isSafeDeployed())) {
-    //   throw new Error("Gnosis Safe not deployed!");
-    // }
+    const safeSdk = await Safe.default.init({
+      provider: ARBITRUM_RPC_URL, // Or an ethers provider instance
+      signer: SIGNER_PRIVATE_KEY,
+      safeAddress: SAFE_ADDRESS,
+    });
+    if (!(await safeSdk.isSafeDeployed())) {
+      throw new Error("Gnosis Safe not deployed!");
+    }
 
     const stakeSessionResponse = await axios.post(
       "https://api.stakek.it/v1/actions/enter",
@@ -76,71 +76,73 @@ const processStaking = async () => {
         }
       );
 
-      // 3b. Construct the transaction on StakeKit
-      //     The example picks `gasResponse.modes.values[1]`, but choose what suits you (0, 1, 2, etc.)
-      // Couldn't find this in the docs, solo dejé 1 como valor
-      const { data: constructedTransactionResponse } = await axios.patch(
+      const constructedRes = await axios.patch(
         `https://api.stakek.it/v1/transactions/${partialTx.id}`,
-        {
-          gasArgs: gasResponse.modes.values[1].gasArgs,
-        },
+        { gasArgs: gasResponse.modes.values[1].gasArgs }, // pick whichever index you want
         {
           headers: {
-            Accept: "application/json",
             "X-API-KEY": STAKEKIT_API_KEY,
+            Accept: "application/json",
             "Content-Type": "application/json",
           },
         }
       );
 
       // 3c. Sign the returned unsigned transaction
-      const unsignedTx = JSON.parse(
-        constructedTransactionResponse.unsignedTransaction
-      );
-      const signedTransaction = await wallet.signTransaction(unsignedTx);
+      const unsignedTx = JSON.parse(constructedRes.data.unsignedTransaction);
+
+      const txHash = await executeGnosisSafeTx(unsignedTx, safeSdk);
 
       // 3d. Submit signed transaction to StakeKit
-      const { data: submitResponse } = await axios.post(
+      const submitResponse = await axios.post(
         `https://api.stakek.it/v1/transactions/${partialTx.id}/submit`,
         {
-          signedTransaction: signedTransaction,
+          // Instead of "signedTransaction", we might try "transactionHash"
+          // or something else if StakeKit’s docs let us. They might not yet
+          // support Gnosis Safe officially. If not, you may skip this step
+          // and just rely on the chain confirmation yourself.
+          transactionHash: txHash,
         },
         {
           headers: {
-            Accept: "application/json",
             "X-API-KEY": STAKEKIT_API_KEY,
+            Accept: "application/json",
             "Content-Type": "application/json",
           },
         }
       );
 
+      console.log("SUBMIT RESPONSE", submitResponse);
+
       // 3e. Poll for transaction confirmation
       while (true) {
-        const { data: statusResponse } = await axios.get(
+        const statusRes = await axios.get(
           `https://api.stakek.it/v1/transactions/${partialTx.id}/status`,
           {
             headers: {
+              "X-API-KEY": STAKEKIT_API_KEY,
               Accept: "application/json",
-              "X-API-KEY": API_KEY,
             },
           }
         );
-
-        let resp = statusResponse;
-        if (statusResponse.status === "CONFIRMED") {
-          console.log("Transaction Confirmed:", statusResponse.url);
+        let resp;
+        if (statusRes.data.status === "CONFIRMED") {
+          console.log("Confirmed!", statusRes.data.url);
+          resp = statusRes.data.url;
           break;
-        } else if (statusResponse.status === "FAILED") {
-          console.error("TRANSACTION FAILED");
+        } else if (statusRes.data.status === "FAILED") {
+          resp = statusRes.data.status;
+          console.error("Transaction failed.");
           break;
         } else {
           console.log("Pending...");
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
     }
 
-    console.log(">>> Staking process complete!");
+    console.log("All partial transactions complete!");
+
     return resp;
   } catch (error) {
     console.error("Error: ", error.response ? error.response.data : error);
