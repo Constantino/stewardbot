@@ -80,6 +80,8 @@ export default function InvestmentSuggestions({ investmentData }) {
     let res2 = await response2.json();
 
     console.log(res2);
+
+    alert("Investments done! You can review the TXs in here: https://arbiscan.io/address/0x6eC45c239C714271590D1aa45B86d54965bC1dA2 ");
   }
 
 
