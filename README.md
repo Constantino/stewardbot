@@ -10,6 +10,10 @@ StewardBot is an AI Agent that connects to OpenAI to provide suggestions to buy,
 - One-click flow to start staking assets with StakeKit's API
 - All assets are assumed to be guarded in a Safe wallet
 
+![Stewardbot](./img/stewardbot_01.png "Prompting the agent for investment advice")
+
+![Stewardbot](./img/stewardbot_02.png "One-click staking from real-time dashboard")
+
 ## Getting Started
 
 ### Prerequisites
