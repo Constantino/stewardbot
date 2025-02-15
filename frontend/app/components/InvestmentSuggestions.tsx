@@ -80,6 +80,8 @@ export default function InvestmentSuggestions({ investmentData }) {
     let res2 = await response2.json();
 
     console.log(res2);
+
+    alert("Investments done! Review your Safe wallet shortly.");
   }
 
 
